@@ -49,6 +49,9 @@ export function Navbar() {
               <Link href="/proveedores" className="text-sm font-medium text-[hsl(var(--muted-foreground))] transition-colors hover:text-[hsl(var(--primary))]">
                 Proveedores
               </Link>
+              <Link href="/productos" className="text-sm font-medium text-[hsl(var(--muted-foreground))] transition-colors hover:text-[hsl(var(--primary))]">
+                Productos
+              </Link>
               {/* Más enlaces... Presupuestos, Facturas, etc. */}
             </>
           )}

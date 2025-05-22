@@ -11,7 +11,7 @@ export type EstadoProveedor = "NACIONAL" | "INTERNACIONAL"; // Ejemplo, ajusta s
 // (Esto es un placeholder, necesitará ser implementado según tu lógica de contador)
 interface ContadorProps<T, S extends string | number | symbol> {
   items: T[];                                   // Todos los items para calcular los conteos totales
-  tipo: "factura" | "presupuesto" | "gasto" | "cliente" | "categoria" | "proveedor";
+  tipo: "factura" | "presupuesto" | "gasto" | "cliente" | "categoria" | "proveedor" | "producto";
   onFilterChange: (estado: S | null) => void;   // Función para cambiar el filtro
   estadoActivo: S | null;                       // Filtro actualmente seleccionado
   getEstadoFn: (item: T) => S;                  // Función para obtener el estado de un item

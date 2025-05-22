@@ -36,7 +36,7 @@ interface DataTableWithFiltersProps<T extends Record<string, unknown>, S extends
   searchPlaceholder?: string;
   
   // Filtros de estado (Contador)
-  tipo: "factura" | "presupuesto" | "gasto" | "cliente" | "categoria" | "proveedor";
+  tipo: "factura" | "presupuesto" | "gasto" | "cliente" | "categoria" | "proveedor" | "producto";
   filtroEstado: S | null; // El filtro activo puede ser S o null (todos)
   setFiltroEstado: (estado: S | null) => void;
   getEstadoFn?: (item: T) => S; // Esta función debe devolver un estado válido S, no null
