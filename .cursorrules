@@ -1,0 +1,113 @@
+# Reglas y Convenciones para PresuX SaaS
+
+Como norma general da una pequeña explicacion y si hay que editar un archivo hazlo, no es necesario que escribas primero el codigo para que lo vea y luego lo escribas otra vez para modificar el archivo
+Se explicativo pero no te extiendas mucho. Me sirve lo que me expliques para aprender, pero si pones un texto muy largo nos hará perder el tiempo
+Sobre todo cuando hay problemas es preferible que me hagas la explicación cuando el problema se haya solucionado
+
+En Next.js 15, los params en rutas dinámicas son ahora Promises y deben esperarse con await antes de usar sus propiedades.
+
+## Estructura del Proyecto
+- `/src/app/*` - Rutas y páginas de la aplicación
+- `/src/components/*` - Componentes reutilizables (Radix UI + custom)
+- `/src/lib/*` - Utilidades y configuraciones
+- `/src/hooks/*` - Hooks personalizados
+- `/src/types/*` - Definiciones de tipos TypeScript
+- `/src/services/*` - Servicios y lógica de negocio
+- `/src/config/*` - Configuraciones por entorno
+- `/src/middleware/*` - Middleware de autenticación y autorización
+- `/src/features/*` - Características específicas del SaaS (ej: suscripciones, planes)
+
+## Convenciones de Código
+- Usar TypeScript estricto
+- Componentes funcionales con React Hooks
+- Nombres de archivos en kebab-case
+- Nombres de componentes en PascalCase
+- Interfaces y tipos en PascalCase con prefijo I para interfaces
+- Variables y funciones en camelCase
+- Constantes en UPPER_SNAKE_CASE
+- Comentarios en español
+- Documentación de componentes con JSDoc
+
+## Manejo de IDs y Rutas
+### Backend (API Routes)
+- Usar UUID v4 para IDs de entidades
+- Rutas API siguiendo el patrón REST: `/api/[entidad]/[id]`
+- Los parámetros de ruta son Promises en Next.js 15
+- Siempre usar await params en backend
+- Validar IDs antes de procesar requests
+- Manejar errores 404 específicamente
+
+### Frontend (Pages y Componentes)
+- Usar Server Components cuando sea posible
+- Para páginas dinámicas: `/app/[entidad]/[id]/page.tsx`
+- Para edición: `/app/[entidad]/editar/[id]/page.tsx`
+- Los parámetros de ruta son Promises
+- Usar use(params) para resolver Promises en frontend
+- Implementar estados de carga y error
+- Usar streaming y Suspense para mejor UX
+
+## Base de Datos (Supabase)
+- Usar RLS (Row Level Security) para todos los datos
+- Nombres de tablas en snake_case
+- Nombres de columnas en snake_case
+- Prefijos para tablas por módulo (ej: auth_, billing_, etc.)
+- Índices para campos de búsqueda frecuente
+- Triggers para auditoría y mantenimiento
+- RLS basado en roles de usuario y suscripción
+- Preparado para futura implementación multi-empresa
+
+## Autenticación y Autorización
+- Implementar autenticación con Supabase Auth
+- Roles: super_admin, admin, user
+- Middleware para protección de rutas
+- Validación de permisos por suscripción
+- Manejo de sesiones y tokens
+- Preparado para futura implementación multi-empresa
+
+## Suscripciones y Facturación
+- Integración con Stripe para pagos
+- Planes: Free, Pro, Enterprise
+- Webhooks para eventos de suscripción
+- Límites por plan
+- Facturación automática
+
+## Despliegue (Railway)
+- Variables de entorno por ambiente
+- CI/CD con GitHub Actions
+- Monitoreo y logging
+- Backups automáticos
+- Escalado automático
+
+## Seguridad
+- Sanitización de inputs
+- Validación de datos
+- Rate limiting
+- CORS configurado
+- Headers de seguridad
+- Auditoría de acciones
+
+## Performance
+- Optimización de imágenes
+- Caching estratégico
+- Lazy loading de componentes
+- Optimización de queries
+- Monitoreo de métricas
+- Streaming y Suspense para mejor UX
+
+## Internacionalización
+- Soporte multi-idioma (español por defecto)
+- Formateo de fechas y números
+- Zonas horarias
+
+## Testing
+- Tests unitarios con Jest
+- Tests de integración
+- Tests E2E con Cypress
+- Coverage mínimo 80%
+
+## Documentación
+- README.md detallado
+- Documentación de API
+- Guías de contribución
+- Documentación de despliegue
+- Documentación de arquitectura 
