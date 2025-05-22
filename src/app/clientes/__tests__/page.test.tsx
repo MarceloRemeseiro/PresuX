@@ -1,7 +1,8 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, Mock } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import ClientesPage from '../page';
 import { apiClient } from '@/lib/apiClient';
+import { ICliente, TipoCliente } from '@/types';
 
 // Mock del useRouter
 vi.mock('next/navigation', () => ({
@@ -47,38 +48,45 @@ vi.mock('sonner', () => ({
 }));
 
 describe('ClientesPage', () => {
-  // Datos de prueba
-  const clientesMock = [
+  const clientesMock: ICliente[] = [
     { 
       id: '1', 
+      user_id: 'user1',
       nombre: 'Cliente Test 1', 
-      tipo: 'EMPRESA', 
+      tipo: TipoCliente.EMPRESA,
       nif: '123456789A',
       email: 'cliente1@test.com',
-      telefono: '123456789'
+      telefono: '123456789',
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString()
     },
     { 
       id: '2', 
+      user_id: 'user1',
       nombre: 'Cliente Test 2', 
-      tipo: 'AUTONOMO', 
+      tipo: TipoCliente.AUTONOMO,
       nif: '987654321B',
       email: 'cliente2@test.com',
-      telefono: '987654321'
+      telefono: '987654321',
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString()
     },
     { 
       id: '3', 
+      user_id: 'user1',
       nombre: 'Cliente Test 3', 
-      tipo: 'PARTICULAR', 
+      tipo: TipoCliente.PARTICULAR,
       nif: '111222333C',
       email: 'cliente3@test.com',
-      telefono: '111222333'
+      telefono: '111222333',
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString()
     }
   ];
 
   beforeEach(() => {
     vi.clearAllMocks();
-    // Configuración del mock de apiClient para devolver datos
-    (apiClient as any).mockResolvedValue(clientesMock);
+    (apiClient as Mock).mockResolvedValue(clientesMock);
     
     // Mockear sessionStorage
     const mockSessionStorage = {
@@ -113,17 +121,14 @@ describe('ClientesPage', () => {
   });
 
   it('maneja errores de carga', async () => {
-    // Configurar apiClient para lanzar un error
-    (apiClient as any).mockRejectedValue(new Error('Error de prueba'));
+    (apiClient as Mock).mockRejectedValue(new Error('Error de prueba'));
     
     render(<ClientesPage />);
     
-    // Esperar a que se maneje el error
     await waitFor(() => {
       expect(screen.getByText('Error de prueba')).toBeInTheDocument();
     });
     
-    // Verificar que se muestra un botón para reintentar
     expect(screen.getByText('Intentar de nuevo')).toBeInTheDocument();
   });
 

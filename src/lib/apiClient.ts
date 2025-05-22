@@ -6,7 +6,7 @@
 type FetchOptions = {
   method?: 'GET' | 'POST' | 'PUT' | 'DELETE';
   headers?: Record<string, string>;
-  body?: any;
+  body?: unknown;
 };
 
 /**
@@ -16,7 +16,7 @@ type FetchOptions = {
  * @returns Promise con los datos de la respuesta parseados como JSON
  * @throws Error si la respuesta no es OK con el mensaje de error del servidor
  */
-export async function apiClient<T = any>(
+export async function apiClient<T = unknown>(
   url: string, 
   options: FetchOptions = {}
 ): Promise<T> {

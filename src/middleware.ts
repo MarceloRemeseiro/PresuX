@@ -1,37 +1,10 @@
 import { NextResponse, type NextRequest } from 'next/server';
 import { createServerClient, type CookieOptions } from '@supabase/ssr';
 
-// Función para crear el cliente Supabase en el servidor (middleware, API routes, Server Components)
-const createSupabaseServerClient = (request: NextRequest) => {
-  return createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        get(name: string) {
-          return request.cookies.get(name)?.value;
-        },
-        set(name: string, value: string, options: CookieOptions) {
-          request.cookies.set({
-            name,
-            value,
-            ...options,
-          });
-        },
-        remove(name: string, options: CookieOptions) {
-          request.cookies.set({
-            name,
-            value: '',
-            ...options,
-          });
-        },
-      },
-    }
-  );
-};
+// La función createSupabaseServerClient (líneas 5-31) ha sido eliminada porque no se utilizaba.
 
 export async function middleware(request: NextRequest) {
-  let response = NextResponse.next({
+  const response = NextResponse.next({
     request: {
       headers: request.headers,
     },
@@ -55,7 +28,7 @@ export async function middleware(request: NextRequest) {
     }
   );
 
-  const { data: { user }, error: userError } = await supabase.auth.getUser();
+  const { data: { user } } = await supabase.auth.getUser();
   
   if (process.env.NODE_ENV === 'development' && process.env.DISABLE_AUTH_FOR_DEV === 'true') {
     console.log('Auth middleware desactivado para desarrollo vía DISABLE_AUTH_FOR_DEV');

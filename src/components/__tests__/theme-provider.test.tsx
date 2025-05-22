@@ -1,5 +1,5 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { render, screen, waitFor } from '@testing-library/react';
+import { describe, it, expect, vi, beforeEach, afterEach, type Mock } from 'vitest';
+import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { ThemeProvider, useTheme } from '../theme-provider';
 
@@ -17,8 +17,11 @@ function TestComponent() {
 }
 
 describe('ThemeProvider', () => {
-  let matchMediaMock: any;
-  let localStorageMock: any;
+  let matchMediaMock: Mock;
+  let localStorageMock: {
+    getItem: Mock;
+    setItem: Mock;
+  };
   
   beforeEach(() => {
     // Mock para localStorage

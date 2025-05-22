@@ -4,7 +4,12 @@ import { DataTable } from '../data-table';
 
 describe('DataTable', () => {
   // Datos de prueba
-  const testData = [
+  interface ITestItem {
+    id: string;
+    name: string;
+    category: string;
+  }
+  const testData: ITestItem[] = [
     { id: '1', name: 'Test 1', category: 'A' },
     { id: '2', name: 'Test 2', category: 'B' },
     { id: '3', name: 'Test 3', category: 'A' },
@@ -16,13 +21,13 @@ describe('DataTable', () => {
       key: 'name',
       header: 'Nombre',
       sortable: true,
-      cell: (item: any) => <div>{item.name}</div>
+      cell: (item: ITestItem) => <div>{item.name}</div>
     },
     {
       key: 'category',
       header: 'Categoría',
       sortable: true,
-      cell: (item: any) => <div>{item.category}</div>
+      cell: (item: ITestItem) => <div>{item.category}</div>
     },
     {
       key: 'actions',

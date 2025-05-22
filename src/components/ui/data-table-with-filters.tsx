@@ -20,13 +20,15 @@ export type SortConfig = {
 // Re-exportamos los tipos de estado específicos para quien use este componente
 export type { EstadoCliente, EstadoProveedor };
 
-interface DataTableWithFiltersProps<T extends Record<string, any>, S extends EstadoGenerico> {
+// S ahora es el tipo de estado REAL de un item, no puede ser null.
+// El filtro activo sí puede ser S | null.
+interface DataTableWithFiltersProps<T extends Record<string, unknown>, S extends Exclude<EstadoGenerico, null>> {
   // Datos y configuración
-  columns: DataTableColumn<T>[]; // Usamos DataTableColumn de data-table.tsx
-  data: T[];                  // Datos paginados para mostrar en la tabla
-  allFilteredData?: T[];      // Opcional: Todos los datos (sin paginar, pero ya filtrados por search/tipo) para el contador
-  allData?: T[];              // Opcional: Todos los datos sin filtrar, para calcular totales reales en el contador
-  filteredItemsCount: number; // Total de items después de aplicar todos los filtros (búsqueda y tipo)
+  columns: DataTableColumn<T>[];
+  data: T[];
+  allFilteredData?: T[];
+  allData?: T[];
+  filteredItemsCount: number;
   
   // Búsqueda
   searchTerm: string;
@@ -34,12 +36,12 @@ interface DataTableWithFiltersProps<T extends Record<string, any>, S extends Est
   searchPlaceholder?: string;
   
   // Filtros de estado (Contador)
-  tipo: "factura" | "presupuesto" | "gasto" | "cliente" | "categoria" | "proveedor"; // Tipos que maneja el Contador
-  filtroEstado: S; // El estado actualmente seleccionado en el Contador
-  setFiltroEstado: (estado: S | null) => void; // Función para cambiar el estado en el Contador (permite null para "todos")
-  getEstadoFn?: (item: T) => S; // Función para obtener el estado de un item (necesaria para el Contador)
-  showContador?: boolean;      // Opción para mostrar/ocultar el contador
-  soloConteo?: boolean;        // Si es true, el contador solo muestra los conteos sin permitir filtrar
+  tipo: "factura" | "presupuesto" | "gasto" | "cliente" | "categoria" | "proveedor";
+  filtroEstado: S | null; // El filtro activo puede ser S o null (todos)
+  setFiltroEstado: (estado: S | null) => void;
+  getEstadoFn?: (item: T) => S; // Esta función debe devolver un estado válido S, no null
+  showContador?: boolean;
+  soloConteo?: boolean;
   
   // Ordenación
   sortConfig?: SortConfig;     // Configuración de ordenación actual
@@ -60,7 +62,7 @@ interface DataTableWithFiltersProps<T extends Record<string, any>, S extends Est
   errorMessage?: string;
 }
 
-export function DataTableWithFilters<T extends Record<string, any>, S extends EstadoGenerico>({
+export function DataTableWithFilters<T extends Record<string, unknown>, S extends Exclude<EstadoGenerico, null>>({
   columns,
   data, // Estos son los datos ya paginados para la tabla
   allFilteredData, // Estos son todos los datos filtrados para el contador

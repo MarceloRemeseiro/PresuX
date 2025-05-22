@@ -3,11 +3,12 @@
 import * as React from "react";
 import { supabase } from "@/lib/supabaseClient";
 import type { Session, User } from "@supabase/supabase-js";
+import { IProfile, UserRole } from "@/types";
 
 export interface AuthContextType {
   session: Session | null;
   user: User | null;
-  profile: any | null; // Podríamos tipar esto más adelante con IProfile
+  profile: IProfile | null;
   isLoading: boolean;
   signOut: () => Promise<void>;
 }
@@ -34,12 +35,12 @@ const DEV_MOCK_SESSION: Session = {
   expires_at: Math.floor(Date.now() / 1000) + 3600,
 };
 
-const DEV_MOCK_PROFILE = {
+const DEV_MOCK_PROFILE: IProfile = {
   id: "dev-user-id-123",
   nombre_completo: "Usuario de Prueba (Dev)",
-  avatar_url: null, // o una URL de imagen de placeholder
-  rol: "user", // o 'admin' si quieres probar funcionalidades de admin
-  // ... otros campos de tu tabla profiles
+  avatar_url: null,
+  rol: UserRole.USER,
+  email: "dev@example.com",
   created_at: new Date().toISOString(),
   updated_at: new Date().toISOString(),
 };
@@ -48,33 +49,53 @@ const DEV_MOCK_PROFILE = {
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [session, setSession] = React.useState<Session | null>(null);
   const [user, setUser] = React.useState<User | null>(null);
-  const [profile, setProfile] = React.useState<any | null>(null);
+  const [profile, setProfile] = React.useState<IProfile | null>(null);
   const [isLoading, setIsLoading] = React.useState(true);
 
-  // Quitamos los logs de renderizado para no saturar con el modo dev
-  // console.log('AuthProvider: Renderizado. isLoading:', isLoading, 'User:', user?.id, 'Profile:', profile);
-
-  React.useEffect(() => {
-    // Condición para simular usuario en desarrollo
+  const fetchProfile = React.useCallback(async (userId: string) => {
     if (process.env.NODE_ENV === 'development' && process.env.NEXT_PUBLIC_DISABLE_AUTH_FOR_DEV === 'true') {
-      console.warn('AuthProvider: MODO DESARROLLO - SIMULANDO USUARIO AUTENTICADO. Las llamadas reales a Supabase Auth están desactivadas en AuthProvider.');
-      setSession(DEV_MOCK_SESSION);
-      setUser(DEV_MOCK_USER);
       setProfile(DEV_MOCK_PROFILE);
       setIsLoading(false);
-      return; // No ejecutar la lógica real de Supabase
+      return;
+    }
+    
+    try {
+      const { data, error, status } = await supabase
+        .from("profiles")
+        .select("*")
+        .eq("id", userId)
+        .single<IProfile>();
+
+      if (error && status !== 406) {
+        console.error("AuthProvider: Error fetching profile (modo real):", { message: error.message, status });
+        setProfile(null);
+      } else if (data) {
+        setProfile(data);
+      } else {
+        setProfile(null);
+      }
+    } catch (e: unknown) {
+        console.error("AuthProvider: Excepción en fetchProfile (modo real):", e instanceof Error ? e.message : e);
+        setProfile(null);
+    } finally {
+        setIsLoading(false);
+    }
+  }, []);
+
+  React.useEffect(() => {
+    if (process.env.NODE_ENV === 'development' && process.env.NEXT_PUBLIC_DISABLE_AUTH_FOR_DEV === 'true') {
+      setSession(DEV_MOCK_SESSION);
+      setUser(DEV_MOCK_USER);
+      fetchProfile(DEV_MOCK_USER.id);
+      return;
     }
 
-    // Lógica original de Supabase si no estamos simulando
-    console.log('AuthProvider: useEffect disparado (modo real).');
     setIsLoading(true);
-    
-    supabase.auth.getSession().then(({ data: { session: currentSession } }) => {
-      console.log('AuthProvider: getSession() completado (modo real).', { session: currentSession ? { user_id: currentSession.user.id } : null });
+    supabase.auth.getSession().then(async ({ data: { session: currentSession } }) => {
       setSession(currentSession);
       setUser(currentSession?.user ?? null);
       if (currentSession?.user) {
-        fetchProfile(currentSession.user.id);
+        await fetchProfile(currentSession.user.id);
       } else {
         setIsLoading(false);
       }
@@ -85,10 +106,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     const { data: authListener } = supabase.auth.onAuthStateChange(
       async (event, currentSession) => {
-        // No ejecutar si estamos en modo simulación (aunque el return anterior debería prevenirlo)
         if (process.env.NODE_ENV === 'development' && process.env.NEXT_PUBLIC_DISABLE_AUTH_FOR_DEV === 'true') return;
 
-        console.log('AuthProvider: onAuthStateChange - Evento (modo real):', event);
         setSession(currentSession);
         setUser(currentSession?.user ?? null);
         
@@ -104,46 +123,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     return () => {
       if (process.env.NODE_ENV === 'development' && process.env.NEXT_PUBLIC_DISABLE_AUTH_FOR_DEV === 'true') return;
-      
-      console.log('AuthProvider: useEffect cleanup (modo real) - Desuscribiendo.');
       if (authListener && authListener.subscription) {
         authListener.subscription.unsubscribe();
       }
     };
-  }, []); // useEffect se ejecuta solo una vez
-
-  const fetchProfile = async (userId: string) => {
-    // No llamar si estamos en modo simulación
-    if (process.env.NODE_ENV === 'development' && process.env.NEXT_PUBLIC_DISABLE_AUTH_FOR_DEV === 'true') {
-        console.warn('AuthProvider: fetchProfile omitido en modo desarrollo simulado.');
-        // Asegurarse de que isLoading se maneje si se llegó aquí por error
-        if (isLoading) setIsLoading(false); 
-        return;
-    }
-    
-    console.log(`AuthProvider: fetchProfile llamado para userId (modo real): ${userId}`);
-    try {
-      const { data, error, status } = await supabase
-        .from("profiles")
-        .select("*")
-        .eq("id", userId)
-        .single();
-
-      if (error && status !== 406) {
-        console.error("AuthProvider: Error fetching profile (modo real):", { message: error.message, status });
-        setProfile(null);
-      } else if (data) {
-        setProfile(data);
-      } else {
-        setProfile(null);
-      }
-    } catch (e: any) {
-        console.error("AuthProvider: Excepción en fetchProfile (modo real):", e.message);
-        setProfile(null);
-    } finally {
-        setIsLoading(false);
-    }
-  };
+  }, [fetchProfile]);
   
   const signOut = async () => {
     if (process.env.NODE_ENV === 'development' && process.env.NEXT_PUBLIC_DISABLE_AUTH_FOR_DEV === 'true') {
@@ -151,17 +135,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setSession(null);
       setUser(null);
       setProfile(null);
-      setIsLoading(false); // Para que la UI reaccione como si se hubiera deslogueado
+      setIsLoading(false);
       return;
     }
 
-    console.log('AuthProvider: signOut llamado (modo real).');
     setIsLoading(true);
     const { error } = await supabase.auth.signOut();
     if (error) {
         console.error('AuthProvider: Error en signOut (modo real):', error.message);
     }
-    // onAuthStateChange se encargará del resto
   };
 
   const value = React.useMemo(() => ({

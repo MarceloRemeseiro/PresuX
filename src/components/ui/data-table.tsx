@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useMemo } from "react"
+import React, { useState } from "react"
 import { ArrowDown, ArrowUp, ArrowUpDown, ChevronLeft, ChevronRight } from "lucide-react"
 import { 
   Table, 
@@ -39,7 +39,7 @@ interface DataTableProps<T> {
   ) => void
 }
 
-export function DataTable<T extends Record<string, any>>({
+export function DataTable<T extends Record<string, unknown>>({
   columns, 
   data,
   className, 
@@ -149,7 +149,7 @@ export function DataTable<T extends Record<string, any>>({
               </TableRow>
             ) : (
               data.map((item, index) => (
-                <TableRow key={item.id || index}> 
+                <TableRow key={typeof item.id === 'string' || typeof item.id === 'number' ? item.id : index}> 
                   {columns.map((column) => (
                     <TableCell 
                       key={column.key}

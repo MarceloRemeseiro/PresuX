@@ -5,15 +5,23 @@ import { EstadoCliente } from '../contador';
 
 describe('ContadorSimple', () => {
   // Datos de prueba
-  const clientesData = [
-    { id: '1', nombre: 'Cliente 1', tipo: 'EMPRESA', nif: '12345678A' },
-    { id: '2', nombre: 'Cliente 2', tipo: 'EMPRESA', nif: '87654321B' },
-    { id: '3', nombre: 'Cliente 3', tipo: 'AUTONOMO', nif: '11111111C' },
-    { id: '4', nombre: 'Cliente 4', tipo: 'PARTICULAR', nif: '22222222D' },
+  const clientesData: ITestCliente[] = [
+    { id: '1', nombre: 'Cliente 1', tipo: "EMPRESA" as EstadoCliente, nif: '12345678A' },
+    { id: '2', nombre: 'Cliente 2', tipo: "EMPRESA" as EstadoCliente, nif: '87654321B' },
+    { id: '3', nombre: 'Cliente 3', tipo: "AUTONOMO" as EstadoCliente, nif: '11111111C' },
+    { id: '4', nombre: 'Cliente 4', tipo: "PARTICULAR" as EstadoCliente, nif: '22222222D' },
   ];
 
+  // Tipo para los datos de cliente en el test
+  interface ITestCliente {
+    id: string;
+    nombre: string;
+    tipo: EstadoCliente;
+    nif: string;
+  }
+
   // Función para obtener el tipo de cliente
-  const getClienteTipo = (cliente: any): EstadoCliente => cliente.tipo as EstadoCliente;
+  const getClienteTipo = (cliente: ITestCliente): EstadoCliente => cliente.tipo;
 
   it('muestra el contador con totales correctos', () => {
     render(

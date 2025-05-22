@@ -18,7 +18,7 @@ import {
   Clock,
   Info
 } from "lucide-react";
-import { toast, Toaster } from "sonner";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -37,7 +37,6 @@ import {
   DialogDescription,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
   DialogFooter
 } from "@/components/ui/dialog";
 
@@ -59,10 +58,11 @@ export default function ClienteDetallePage() {
         setError(null);
         const data = await apiClient<ICliente>(`/api/clientes/${clienteId}`);
         setCliente(data);
-      } catch (err: any) {
+      } catch (err: unknown) {
         console.error("Error fetching cliente:", err);
-        setError(err.message || "Error al cargar los datos del cliente");
-        toast.error(err.message || "Error al cargar los datos del cliente");
+        const errorMessage = err instanceof Error ? err.message : "Error al cargar los datos del cliente";
+        setError(errorMessage);
+        toast.error(errorMessage);
       } finally {
         setIsLoading(false);
       }
@@ -87,9 +87,10 @@ export default function ClienteDetallePage() {
       setTimeout(() => {
         router.push("/clientes");
       }, 1500);
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error("Error deleting cliente:", err);
-      toast.error(err.message || "Error al eliminar el cliente");
+      const errorMessage = err instanceof Error ? err.message : "Error al eliminar el cliente";
+      toast.error(errorMessage);
       setIsDeleting(false);
     }
   };
@@ -198,7 +199,7 @@ export default function ClienteDetallePage() {
                 {getTipoIcon(cliente.tipo)}
                 <div>
                   <CardTitle className="text-2xl">{cliente.nombre}</CardTitle>
-                  <CardDescription>
+                  <CardDescription className="mt-2">
                     <span 
                       className={`px-2 py-0.5 rounded-full text-xs ${getTipoClass(cliente.tipo)}`}
                     >
@@ -273,11 +274,11 @@ export default function ClienteDetallePage() {
             </CardContent>
 
             <CardFooter className="flex justify-between border-t p-6">
-              <div className="flex items-center text-sm text-gray-500">
+              <div className="flex items-center mt-4 text-sm text-gray-500">
                 <Clock className="h-4 w-4 mr-1" />
                 <span>Creado: {formatDate(cliente.created_at)}</span>
               </div>
-              <div className="flex items-center text-sm text-gray-500">
+              <div className="flex items-center mt-4 text-sm text-gray-500">
                 <Clock className="h-4 w-4 mr-1" />
                 <span>Actualizado: {formatDate(cliente.updated_at)}</span>
               </div>
@@ -351,8 +352,6 @@ export default function ClienteDetallePage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-
-      <Toaster />
     </div>
   );
 } 

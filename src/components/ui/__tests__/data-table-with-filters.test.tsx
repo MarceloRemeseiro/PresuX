@@ -15,10 +15,16 @@ vi.mock('../contador', () => ({
 
 describe('DataTableWithFilters', () => {
   // Datos de prueba
-  const testData = [
-    { id: '1', nombre: 'Test 1', tipo: 'EMPRESA' },
-    { id: '2', nombre: 'Test 2', tipo: 'AUTONOMO' },
-    { id: '3', nombre: 'Test 3', tipo: 'EMPRESA' },
+  interface ITestItem {
+    id: string;
+    nombre: string;
+    tipo: EstadoCliente;
+  }
+
+  const testData: ITestItem[] = [
+    { id: '1', nombre: 'Test 1', tipo: "EMPRESA" as EstadoCliente },
+    { id: '2', nombre: 'Test 2', tipo: "AUTONOMO" as EstadoCliente },
+    { id: '3', nombre: 'Test 3', tipo: "EMPRESA" as EstadoCliente },
   ];
 
   // Columnas de prueba
@@ -27,13 +33,13 @@ describe('DataTableWithFilters', () => {
       key: 'nombre',
       header: 'Nombre',
       sortable: true,
-      cell: (item: any) => <div>{item.nombre}</div>
+      cell: (item: ITestItem) => <div>{item.nombre}</div>
     },
     {
       key: 'tipo',
       header: 'Tipo',
       sortable: true,
-      cell: (item: any) => <div>{item.tipo}</div>
+      cell: (item: ITestItem) => <div>{item.tipo}</div>
     }
   ];
 
@@ -43,7 +49,7 @@ describe('DataTableWithFilters', () => {
   const mockOnPaginationChange = vi.fn();
 
   // Función para obtener el tipo
-  const getClienteTipo = (cliente: any): EstadoCliente => cliente.tipo as EstadoCliente;
+  const getClienteTipo = (cliente: ITestItem): EstadoCliente => cliente.tipo;
 
   it('renderiza con datos y componentes internos', () => {
     render(

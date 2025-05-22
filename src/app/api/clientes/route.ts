@@ -5,7 +5,7 @@ import { ClienteSchema } from '@/lib/schemas';
 import { ICliente } from '@/types';
 
 // GET /api/clientes - Obtener todos los clientes
-export async function GET(request: Request) {
+export async function GET() {
   const cookieStore = await cookies();
   
   const supabase = createServerClient(
@@ -56,9 +56,12 @@ export async function GET(request: Request) {
     }
 
     return NextResponse.json(clientes as ICliente[]);
-  } catch (e: any) {
+  } catch (e: unknown) {
     console.error('Excepción en GET /api/clientes:', e);
-    return NextResponse.json({ error: 'Excepción en el servidor', details: e.message }, { status: 500 });
+    if (e instanceof Error) {
+      return NextResponse.json({ error: 'Excepción en el servidor', details: e.message }, { status: 500 });
+    }
+    return NextResponse.json({ error: 'Excepción desconocida en el servidor' }, { status: 500 });
   }
 }
 
@@ -129,8 +132,11 @@ export async function POST(request: Request) {
     }
 
     return NextResponse.json(data as ICliente, { status: 201 });
-  } catch (e: any) {
+  } catch (e: unknown) {
     console.error('Excepción en POST /api/clientes:', e);
-    return NextResponse.json({ error: 'Excepción en el servidor', details: e.message }, { status: 500 });
+    if (e instanceof Error) {
+      return NextResponse.json({ error: 'Excepción en el servidor', details: e.message }, { status: 500 });
+    }
+    return NextResponse.json({ error: 'Excepción desconocida en el servidor' }, { status: 500 });
   }
 } 

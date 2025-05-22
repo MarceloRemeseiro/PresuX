@@ -5,7 +5,6 @@ import Link from "next/link";
 import { useAuth } from "@/components/auth-provider";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/theme-toggle";
-import { supabase } from "@/lib/supabaseClient"; // Necesario para el redirect de OAuth si lo implementamos
 
 export function Navbar() {
   const { user, profile, signOut, isLoading } = useAuth();
@@ -46,6 +45,9 @@ export function Navbar() {
               </Link>
               <Link href="/clientes" className="text-sm font-medium text-[hsl(var(--muted-foreground))] transition-colors hover:text-[hsl(var(--primary))]">
                 Clientes
+              </Link>
+              <Link href="/proveedores" className="text-sm font-medium text-[hsl(var(--muted-foreground))] transition-colors hover:text-[hsl(var(--primary))]">
+                Proveedores
               </Link>
               {/* Más enlaces... Presupuestos, Facturas, etc. */}
             </>

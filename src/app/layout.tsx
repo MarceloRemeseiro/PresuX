@@ -3,6 +3,7 @@ import { ThemeProvider } from "@/components/theme-provider";
 import { AuthProvider } from "@/components/auth-provider";
 import { Navbar } from "@/components/layout/navbar";
 import { Metadata } from "next";
+import { Toaster } from "sonner";
 
 export const metadata: Metadata = {
   title: "PresuX - Gestión de Presupuestos y Facturas",
@@ -29,6 +30,7 @@ export default function RootLayout({
             <main className="container mx-auto py-8 px-4 md:px-6 lg:px-8">
               {children}
             </main>
+            <Toaster />
           </ThemeProvider>
         </AuthProvider>
       </body>

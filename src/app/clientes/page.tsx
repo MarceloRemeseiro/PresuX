@@ -2,17 +2,10 @@
 
 import { useState, useEffect, useRef } from "react"
 import { Button } from "@/components/ui/button"
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card"
-import { toast, Toaster } from "sonner"
+import { toast } from "sonner"
 import { Edit, Trash, Loader2, PlusCircle, MoreHorizontal, FileCode } from "lucide-react"
 import Link from "next/link"
-import { useRouter } from "next/navigation"
+// import { useRouter } from "next/navigation" // Eliminado
 import { DataTableWithFilters, EstadoCliente } from "@/components/ui/data-table-with-filters"
 import { ContadorSimple } from "@/components/ui/contador-simple"
 import {
@@ -34,12 +27,12 @@ import { apiClient } from "@/lib/apiClient"
 import { ICliente } from "@/types"
 
 // Tipo para la respuesta paginada de la API
-interface ClientesApiResponse {
-  clientes: ICliente[];
-  total: number;
-  pagina: number;
-  limite: number;
-}
+// interface ClientesApiResponse { // Eliminada ya que no se usa
+//   clientes: ICliente[];
+//   total: number;
+//   pagina: number;
+//   limite: number;
+// }
 
 // Tipo para la ordenación
 type SortDirection = "asc" | "desc" | null;
@@ -58,7 +51,7 @@ const normalizeText = (text: string): string => {
 };
 
 export default function ClientesPage() {
-  const router = useRouter()
+  // const router = useRouter() // Eliminado ya que no se usa
   const [clientes, setClientes] = useState<ICliente[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -73,26 +66,24 @@ export default function ClientesPage() {
     direction: "asc" // Ascendente
   });
   const [currentPage, setCurrentPage] = useState(1)
-  const [itemsPerPage, setItemsPerPage] = useState(10) // O el valor que prefieras
+  const [itemsPerPage] = useState(10)
   const [isInitialLoadDone, setIsInitialLoadDone] = useState(false);
   const prevSearchTermRef = useRef(searchTerm);
 
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [clienteToDelete, setClienteToDelete] = useState<ICliente | null>(null);
 
-  // Función para cargar todos los clientes
   const fetchClientes = async () => {
     setIsLoading(true)
     setError(null); 
     try {
-      // Usando nuestra función apiClient para hacer la petición
       const response = await apiClient<ICliente[]>('/api/clientes');
-      
       setClientes(response);
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Error al cargar clientes:', err)
-      setError(err.message || 'Error al cargar la lista de clientes')
-      toast.error(err.message || 'Error al cargar clientes')
+      const errorMessage = err instanceof Error ? err.message : "Error al cargar la lista de clientes";
+      setError(errorMessage)
+      toast.error(errorMessage)
     } finally {
       setIsLoading(false)
     }
@@ -167,10 +158,8 @@ export default function ClientesPage() {
   const sortedClientes = [...filteredClientes].sort((a, b) => {
     if (!sortConfig.key || !sortConfig.direction) return 0;
     
-    // Obtener los valores a comparar de forma segura
-    let aValue: any, bValue: any;
+    let aValue: string | number | null | undefined | boolean, bValue: string | number | null | undefined | boolean;
     
-    // Acceso seguro a las propiedades por nombre de campo
     switch (sortConfig.key) {
       case 'nombre':
         aValue = a.nombre;
@@ -254,21 +243,15 @@ export default function ClientesPage() {
     
     try {
       setEliminandoId(clienteToDelete.id);
-      
       await apiClient(`/api/clientes/${clienteToDelete.id}`, { method: "DELETE" });
-      
-      // Actualizar la lista de clientes
       setClientes(clientes.filter(cliente => cliente.id !== clienteToDelete.id));
-      
-      // Mostrar mensaje de éxito
       toast.success("Cliente eliminado correctamente");
-      
-      // Cerrar el diálogo
       setShowDeleteDialog(false);
       setClienteToDelete(null);
-    } catch (error) {
+    } catch (error: unknown) {
       console.error("Error:", error);
-      toast.error(error instanceof Error ? error.message : "Error al eliminar el cliente");
+      const errorMessage = error instanceof Error ? error.message : "Error al eliminar el cliente";
+      toast.error(errorMessage);
     } finally {
       setEliminandoId(null);
     }
@@ -512,9 +495,6 @@ export default function ClientesPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-      
-      {/* Toaster para notificaciones */}
-      <Toaster />
     </div>
   )
 } 

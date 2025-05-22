@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { ArrowLeft, Save, Loader2 } from "lucide-react";
-import { toast, Toaster } from "sonner";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -24,7 +24,17 @@ export default function EditarClientePage() {
   const clienteId = params.id;
 
   const [cliente, setCliente] = useState<ICliente | null>(null);
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<{
+    nombre: string;
+    tipo: TipoCliente | "";
+    persona_de_contacto: string;
+    nif: string;
+    direccion: string;
+    ciudad: string;
+    email: string;
+    telefono: string;
+    es_intracomunitario: boolean;
+  }>({
     nombre: "",
     tipo: "",
     persona_de_contacto: "",
@@ -60,10 +70,11 @@ export default function EditarClientePage() {
           telefono: data.telefono || "",
           es_intracomunitario: data.es_intracomunitario || false,
         });
-      } catch (err: any) {
+      } catch (err: unknown) {
         console.error("Error fetching cliente:", err);
-        setError(err.message || "Error al cargar los datos del cliente");
-        toast.error(err.message || "Error al cargar los datos del cliente");
+        const errorMessage = err instanceof Error ? err.message : "Error al cargar los datos del cliente";
+        setError(errorMessage);
+        toast.error(errorMessage);
       } finally {
         setIsLoading(false);
       }
@@ -94,20 +105,44 @@ export default function EditarClientePage() {
       setIsSaving(true);
       setError(null);
       
-      // Solo enviar los campos que han cambiado
       const changedFields: Partial<typeof formData> = {};
       
-      for (const [key, value] of Object.entries(formData)) {
-        // @ts-ignore - Ignoramos errores de tipado aquí
-        if (cliente && cliente[key] !== value) {
-          // @ts-ignore
-          changedFields[key] = value;
+      for (const key in formData) {
+        if (Object.prototype.hasOwnProperty.call(formData, key)) {
+          const typedKey = key as keyof typeof formData;
+          const formValue = formData[typedKey];
+          
+          // Comparar con el valor original del cliente
+          // Asegurarse de que cliente no sea null
+          if (cliente) {
+            const clienteValue = cliente[typedKey as keyof ICliente]; // Asumimos que ICliente tiene todas las keys de formData o son compatibles
+            
+            let valuesAreDifferent = false;
+            if (typedKey === "tipo") {
+              // Compara TipoCliente con (TipoCliente | "")
+              // Si formValue es "", se considera diferente si clienteValue no era null/undefined (ya es TipoCliente)
+              // Si formValue es un TipoCliente, se compara directamente.
+              valuesAreDifferent = clienteValue !== formValue && (formValue !== "" || clienteValue != null);
+            } else if (typedKey === "es_intracomunitario") {
+              // Booleans: clienteValue puede ser boolean, formValue es boolean.
+              // Si clienteValue fuera undefined/null (no debería si ICliente lo tiene), tratarlo como diferente.
+              valuesAreDifferent = clienteValue !== formValue;
+            } else {
+              // Strings: clienteValue puede ser string | null | undefined. formValue es string.
+              // Si formValue es "", se considera diferente si clienteValue no era ya "" o null/undefined.
+              valuesAreDifferent = clienteValue !== formValue && (formValue !== "" || (clienteValue !== null && clienteValue !== undefined));
+            }
+
+            if (valuesAreDifferent) {
+              // @ts-expect-error TypeScript seems to struggle with this specific assignment to a Partial index signature inside a loop.
+              changedFields[typedKey] = formValue;
+            }
+          }
         }
       }
-      
+                  
       if (Object.keys(changedFields).length === 0) {
-        toast.info("No hay cambios para guardar");
-        setIsSaving(false);
+        toast.success("No hay cambios para guardar");
         return;
       }
       
@@ -123,10 +158,12 @@ export default function EditarClientePage() {
       setTimeout(() => {
         router.push(`/clientes/${clienteId}`);
       }, 1500);
-    } catch (err: any) {
-      console.error("Error updating cliente:", err);
-      setError(err.message || "Error al actualizar el cliente");
-      toast.error(err.message || "Error al actualizar el cliente");
+    } catch (err: unknown) {
+      console.error("Error al actualizar cliente:", err);
+      const message =
+        err instanceof Error ? err.message : "Ocurrió un error desconocido";
+      setError(message);
+      toast.error(message);
       setIsSaving(false);
     }
   };
@@ -324,7 +361,7 @@ export default function EditarClientePage() {
             </div>
           </CardContent>
           
-          <CardFooter className="flex justify-between border-t p-6">
+          <CardFooter className="flex justify-between p-6">
             <Button
               type="button"
               variant="outline"
@@ -359,8 +396,6 @@ export default function EditarClientePage() {
           <p>{error}</p>
         </div>
       )}
-
-      <Toaster />
     </div>
   );
 } 

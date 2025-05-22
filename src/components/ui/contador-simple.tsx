@@ -2,17 +2,17 @@
 
 import React from 'react';
 import { cn } from '@/lib/utils';
-import { EstadoCliente, EstadoProveedor } from './contador';
+// import { EstadoCliente, EstadoProveedor } from './contador'; // Eliminadas, no se usan aquí
 
-// Interfaz para las props del componente ContadorSimple
-interface ContadorSimpleProps<T, S> {
+// S ahora se espera que sea string o un subtipo de string
+interface ContadorSimpleProps<T, S extends string> {
   items: T[];                                   // Todos los items para calcular los conteos
   tipo: "factura" | "presupuesto" | "gasto" | "cliente" | "categoria" | "proveedor";
   getEstadoFn: (item: T) => S;                  // Función para obtener el estado de un item
   className?: string;                           // Clase adicional para personalizar estilos
 }
 
-export function ContadorSimple<T, S>({ 
+export function ContadorSimple<T, S extends string>({ 
   items,
   tipo,
   getEstadoFn,
@@ -21,24 +21,23 @@ export function ContadorSimple<T, S>({
   // Calcular conteos de cada estado basados en los items proporcionados
   const counts = items.reduce((acc, item) => {
     const estado = getEstadoFn(item);
-    // @ts-ignore - Esto es necesario porque TypeScript no puede inferir que S es una clave válida
     acc[estado] = (acc[estado] || 0) + 1;
     return acc;
-  }, {} as Record<string, number>);
+  }, {} as Record<S, number>);
 
   // Definir los estados posibles según el tipo
-  let estadosPosibles: string[] = [];
+  let estadosPosibles: S[] = [];
   
   if (tipo === "cliente") {
-    estadosPosibles = ["PARTICULAR", "EMPRESA", "AUTONOMO"];
+    estadosPosibles = ["PARTICULAR", "EMPRESA", "AUTONOMO"] as S[];
   } else if (tipo === "proveedor") {
-    estadosPosibles = ["NACIONAL", "INTERNACIONAL"];
+    estadosPosibles = ["BIENES", "SERVICIOS", "MIXTO"] as S[];
   } else if (tipo === "factura" || tipo === "presupuesto") {
-    estadosPosibles = ["PENDIENTE", "ACEPTADO", "RECHAZADO", "PAGADO"];
+    estadosPosibles = ["PENDIENTE", "ACEPTADO", "RECHAZADO", "PAGADO"] as S[];
   } else if (tipo === "gasto") {
-    estadosPosibles = ["PENDIENTE", "PAGADO"];
+    estadosPosibles = ["PENDIENTE", "PAGADO"] as S[];
   } else {
-    estadosPosibles = Object.keys(counts);
+    estadosPosibles = Object.keys(counts) as S[];
   }
   
   // Filtrar para mostrar solo los estados que tienen al menos un elemento
@@ -69,8 +68,9 @@ export function ContadorSimple<T, S>({
             tipo === "presupuesto" && estado === "RECHAZADO" && "bg-red-100 text-red-800",
             tipo === "gasto" && estado === "PENDIENTE" && "bg-orange-100 text-orange-800",
             tipo === "gasto" && estado === "PAGADO" && "bg-green-100 text-green-800",
-            tipo === "proveedor" && estado === "NACIONAL" && "bg-blue-100 text-blue-800",
-            tipo === "proveedor" && estado === "INTERNACIONAL" && "bg-purple-100 text-purple-800",
+            tipo === "proveedor" && estado === "BIENES" && "bg-blue-100 text-blue-800",
+            tipo === "proveedor" && estado === "SERVICIOS" && "bg-green-100 text-green-800",
+            tipo === "proveedor" && estado === "MIXTO" && "bg-purple-100 text-purple-800"
           )}
         >
           {estado}: {counts[estado]}

@@ -9,7 +9,7 @@ export type EstadoProveedor = "NACIONAL" | "INTERNACIONAL"; // Ejemplo, ajusta s
 
 // Interfaz para las props del componente Contador
 // (Esto es un placeholder, necesitará ser implementado según tu lógica de contador)
-interface ContadorProps<T, S> {
+interface ContadorProps<T, S extends string | number | symbol> {
   items: T[];                                   // Todos los items para calcular los conteos totales
   tipo: "factura" | "presupuesto" | "gasto" | "cliente" | "categoria" | "proveedor";
   onFilterChange: (estado: S | null) => void;   // Función para cambiar el filtro
@@ -19,7 +19,7 @@ interface ContadorProps<T, S> {
 }
 
 // Placeholder para el componente Contador
-export function Contador<T, S>({ 
+export function Contador<T, S extends string | number | symbol>({ 
   items,
   tipo,
   onFilterChange,
@@ -33,10 +33,9 @@ export function Contador<T, S>({
     // Calcular conteos para cada tipo de cliente
     const counts = items.reduce((acc, item) => {
       const estado = getEstadoFn(item);
-      // @ts-ignore - Esto es necesario porque TypeScript no puede inferir que S es una clave válida
       acc[estado] = (acc[estado] || 0) + 1;
       return acc;
-    }, {} as Record<string, number>);
+    }, {} as Record<S, number>);
 
     // Definir los estados posibles según el tipo
     const tiposCliente: EstadoCliente[] = ["PARTICULAR", "EMPRESA", "AUTONOMO"];
@@ -54,10 +53,10 @@ export function Contador<T, S>({
         >
           Todos ({items.length})
         </button>
-        {tiposCliente.map(estado => (
+        {tiposCliente.map((estado: EstadoCliente) => (
           <button 
             key={estado} 
-            onClick={() => onFilterChange(estado as any)} 
+            onClick={() => onFilterChange(estado as S)}
             className={`px-3 py-1 rounded-md text-sm ${
               estadoActivo === estado 
                 ? 'bg-primary text-primary-foreground' 
@@ -65,7 +64,7 @@ export function Contador<T, S>({
             }`}
             disabled={soloConteo}
           >
-            {estado} ({counts[estado] || 0})
+            {estado} ({counts[estado as S] || 0})
           </button>
         ))}
       </div>

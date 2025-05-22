@@ -75,9 +75,13 @@ export async function GET(request: Request, { params }: RouteParams) {
     }
 
     return NextResponse.json(cliente as ICliente);
-  } catch (e: any) {
+  } catch (e: unknown) {
+    const clienteId = (await params).id;
     console.error(`Excepción en GET /api/clientes/${clienteId}:`, e);
-    return NextResponse.json({ error: 'Excepción en el servidor', details: e.message }, { status: 500 });
+    if (e instanceof Error) {
+      return NextResponse.json({ error: 'Excepción en el servidor', details: e.message }, { status: 500 });
+    }
+    return NextResponse.json({ error: 'Excepción desconocida en el servidor' }, { status: 500 });
   }
 }
 
@@ -171,9 +175,13 @@ export async function PUT(request: Request, { params }: RouteParams) {
     }
 
     return NextResponse.json(data as ICliente);
-  } catch (e: any) {
+  } catch (e: unknown) {
+    const clienteId = (await params).id;
     console.error(`Excepción en PUT /api/clientes/${clienteId}:`, e);
-    return NextResponse.json({ error: 'Excepción en el servidor', details: e.message }, { status: 500 });
+    if (e instanceof Error) {
+      return NextResponse.json({ error: 'Excepción en el servidor', details: e.message }, { status: 500 });
+    }
+    return NextResponse.json({ error: 'Excepción desconocida en el servidor' }, { status: 500 });
   }
 }
 
@@ -236,8 +244,12 @@ export async function DELETE(request: Request, { params }: RouteParams) {
     }
 
     return NextResponse.json({ message: 'Cliente eliminado correctamente' }, { status: 200 });
-  } catch (e: any) {
+  } catch (e: unknown) {
+    const clienteId = (await params).id;
     console.error(`Excepción en DELETE /api/clientes/${clienteId}:`, e);
-    return NextResponse.json({ error: 'Excepción en el servidor', details: e.message }, { status: 500 });
+    if (e instanceof Error) {
+      return NextResponse.json({ error: 'Excepción en el servidor', details: e.message }, { status: 500 });
+    }
+    return NextResponse.json({ error: 'Excepción desconocida en el servidor' }, { status: 500 });
   }
 } 
