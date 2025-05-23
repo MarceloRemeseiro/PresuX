@@ -5,16 +5,25 @@ import { z } from 'zod';
 import { marcaIdSchema, updateMarcaSchema } from '@/lib/schemas/marca';
 
 // Helper para obtener el ID validado de los params
-async function getValidatedId(params: unknown): Promise<string | null> {
-  const paramsValidation = z.object({ id: marcaIdSchema }).safeParse(params);
-  if (!paramsValidation.success) {
+async function getValidatedId(params: Promise<{ id: string }>): Promise<string | null> {
+  try {
+    const resolvedParams = await params;
+    console.log('DEBUG - Params recibidos (marcas):', resolvedParams);
+    
+    const paramsValidation = marcaIdSchema.safeParse(resolvedParams.id);
+    if (!paramsValidation.success) {
+      console.log('DEBUG - Error validación ID (marcas):', paramsValidation.error);
+      return null;
+    }
+    return paramsValidation.data;
+  } catch (error) {
+    console.log('DEBUG - Error obteniendo params (marcas):', error);
     return null;
   }
-  return paramsValidation.data.id;
 }
 
 // GET: Obtener una marca específica
-export async function GET(request: Request, { params }: { params: { id: string } }) {
+export async function GET(request: Request, { params }: { params: Promise<{ id: string }> }) {
   const cookieStore = await cookies();
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -58,7 +67,7 @@ export async function GET(request: Request, { params }: { params: { id: string }
 }
 
 // PUT: Actualizar una marca específica
-export async function PUT(request: Request, { params }: { params: { id: string } }) {
+export async function PUT(request: Request, { params }: { params: Promise<{ id: string }> }) {
   const cookieStore = await cookies();
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -135,7 +144,7 @@ export async function PUT(request: Request, { params }: { params: { id: string }
 }
 
 // DELETE: Eliminar una marca específica
-export async function DELETE(request: Request, { params }: { params: { id: string } }) {
+export async function DELETE(request: Request, { params }: { params: Promise<{ id: string }> }) {
   const cookieStore = await cookies();
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -154,6 +163,45 @@ export async function DELETE(request: Request, { params }: { params: { id: strin
       return NextResponse.json({ error: 'ID de marca inválido' }, { status: 400 });
     }
 
+    // Verificar si la marca existe y pertenece al usuario
+    const { data: marca, error: marcaError } = await supabase
+      .from('marcas')
+      .select('id, nombre')
+      .eq('id', marcaId)
+      .eq('user_id', user.id)
+      .single();
+
+    if (marcaError || !marca) {
+      return NextResponse.json({ error: 'Marca no encontrada o no pertenece al usuario.' }, { status: 404 });
+    }
+
+    // Verificar si hay productos que usan esta marca
+    const { data: productosUsandoMarca, error: productosError } = await supabase
+      .from('productos')
+      .select('id, nombre')
+      .eq('marca_id', marcaId)
+      .eq('user_id', user.id)
+      .limit(5); // Limitamos a 5 para mostrar ejemplos
+
+    if (productosError) {
+      console.error('Error verificando productos que usan la marca:', productosError);
+      return NextResponse.json({ error: 'Error al verificar productos asociados: ' + productosError.message }, { status: 500 });
+    }
+
+    if (productosUsandoMarca && productosUsandoMarca.length > 0) {
+      const ejemplosProductos = productosUsandoMarca.map(p => p.nombre).join(', ');
+      const mensaje = productosUsandoMarca.length === 1 
+        ? `No se puede eliminar la marca "${marca.nombre}" porque está siendo usada por el producto: ${ejemplosProductos}.`
+        : `No se puede eliminar la marca "${marca.nombre}" porque está siendo usada por ${productosUsandoMarca.length} productos${productosUsandoMarca.length === 5 ? ' o más' : ''}: ${ejemplosProductos}${productosUsandoMarca.length === 5 ? '...' : ''}.`;
+      
+      return NextResponse.json({ 
+        error: mensaje,
+        code: 'BRAND_IN_USE',
+        productCount: productosUsandoMarca.length 
+      }, { status: 409 });
+    }
+
+    // Si no hay productos usando la marca, proceder con la eliminación
     const { error: deleteError, count } = await supabase
       .from('marcas')
       .delete({ count: 'exact' })

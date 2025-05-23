@@ -3,11 +3,10 @@
 export enum EstadoEquipo {
   DISPONIBLE = "DISPONIBLE",
   ALQUILADO = "ALQUILADO",
-  EN_REPARACION = "EN_REPARACION",
+  MANTENIMIENTO = "MANTENIMIENTO",
+  DAÑADO = "DAÑADO",
   VENDIDO = "VENDIDO",
   BAJA = "BAJA",
-  // Podríamos añadir MANTENIMIENTO si se necesita diferenciar de EN_REPARACION
-  MANTENIMIENTO = "MANTENIMIENTO", 
 }
 
 // Interfaz base para Marcas
@@ -37,7 +36,6 @@ export interface IProducto {
   nombre: string;
   descripcion?: string | null;
   stock: number;
-  precio: number | null; // Precio de venta/referencia general
   categoria_id: string;
   marca_id?: string | null;
   modelo?: string | null;
@@ -56,7 +54,6 @@ export interface IProductoConDetalles {
   id: string;
   nombre: string;
   stock: number;
-  precio: number | null;
   precio_alquiler?: number | null; // Cambiado
   categoria_nombre?: string;
   marca_nombre?: string;

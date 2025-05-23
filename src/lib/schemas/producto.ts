@@ -14,12 +14,6 @@ export const baseProductoSchema = z.object({
     .max(1000, { message: "La descripción no puede exceder los 1000 caracteres" })
     .optional()
     .nullable(),
-  stock: z.number()
-    .int({ message: "El stock debe ser un número entero" })
-    .min(0, { message: "El stock no puede ser negativo" })
-    .default(0),
-  precio: z.number()
-    .min(0, { message: "El precio no puede ser negativo" }),
   categoria_id: categoriaProductoIdSchema, // FK
   marca_id: marcaIdSchema.optional().nullable(), // FK opcional
   modelo: z.string()
@@ -27,9 +21,7 @@ export const baseProductoSchema = z.object({
     .optional()
     .nullable(),
   precio_alquiler: z.number()
-    .min(0, { message: "El precio de alquiler no puede ser negativo" })
-    .optional()
-    .nullable(),
+    .min(0.01, { message: "El precio de alquiler debe ser mayor a 0" }),
   precio_compra_referencia: z.number()
     .min(0, { message: "El precio de compra de referencia no puede ser negativo" })
     .optional()

@@ -52,6 +52,9 @@ export function Navbar() {
               <Link href="/productos" className="text-sm font-medium text-[hsl(var(--muted-foreground))] transition-colors hover:text-[hsl(var(--primary))]">
                 Productos
               </Link>
+              <Link href="/configuracion" className="text-sm font-medium text-[hsl(var(--muted-foreground))] transition-colors hover:text-[hsl(var(--primary))]">
+                Configuración
+              </Link>
               {/* Más enlaces... Presupuestos, Facturas, etc. */}
             </>
           )}

@@ -9,13 +9,7 @@ import { DataTableWithFilters, SortConfig } from '@/components/ui/data-table-wit
 import { IProductoConDetalles } from '@/types';
 import { apiClient } from '@/lib/apiClient'; // Asumiendo esta ruta para apiClient
 import { toast } from 'sonner'; // Para notificaciones de error
-import { Edit, MoreHorizontal } from 'lucide-react'; // Iconos para acciones
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"; // Para el menú de acciones
+import { Edit, Eye } from 'lucide-react'; // Iconos para acciones
 
 // Definición de columnas (se moverá a un archivo separado o se completará más adelante)
 // Por ahora, un placeholder para evitar errores de TypeScript si DataTableWithFilters lo requiere inmediatamente.
@@ -248,28 +242,31 @@ export default function ProductosPage() {
       header: "Acciones",
       cell: (item) => { 
         return (
-          <div className="text-right">
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" className="h-8 w-8 p-0">
-                  <span className="sr-only">Abrir menú</span>
-                  <MoreHorizontal className="h-4 w-4" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuItem asChild>
-                  <Link href={`/productos/editar/${item.id}`}> 
-                    <Edit className="mr-2 h-4 w-4" /> Editar
-                  </Link>
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+          <div className="flex justify-end gap-2">
+            <Button 
+              variant="ghost" 
+              size="icon"
+              asChild
+            >
+              <Link href={`/productos/${item.id}`}>
+                <Eye className="h-4 w-4" />
+              </Link>
+            </Button>
+            <Button 
+              variant="ghost" 
+              size="icon"
+              asChild
+            >
+              <Link href={`/productos/editar/${item.id}`}>
+                <Edit className="h-4 w-4" />
+              </Link>
+            </Button>
           </div>
         );
       },
       sortable: false, 
-      width: "10%", 
-      minWidth: "80px", 
+      width: "15%", 
+      minWidth: "110px", 
     },
   ], []);
 

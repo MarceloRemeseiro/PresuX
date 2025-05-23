@@ -14,7 +14,7 @@ async function getValidatedProductId(params: unknown): Promise<string | null> {
 }
 
 // GET: Obtener un producto específico
-export async function GET(request: Request, { params }: { params: { id: string } }) {
+export async function GET(request: Request, { params: paramsPromise }: { params: Promise<{ id: string }> }) {
   const cookieStore = await cookies();
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -28,6 +28,7 @@ export async function GET(request: Request, { params }: { params: { id: string }
       return NextResponse.json({ error: 'No autenticado' }, { status: 401 });
     }
 
+    const params = await paramsPromise;
     const productoId = await getValidatedProductId(params);
     if (!productoId) {
       return NextResponse.json({ error: 'ID de producto inválido' }, { status: 400 });
@@ -72,7 +73,7 @@ export async function GET(request: Request, { params }: { params: { id: string }
 }
 
 // PUT: Actualizar un producto específico
-export async function PUT(request: Request, { params }: { params: { id: string } }) {
+export async function PUT(request: Request, { params: paramsPromise }: { params: Promise<{ id: string }> }) {
   const cookieStore = await cookies();
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -86,6 +87,7 @@ export async function PUT(request: Request, { params }: { params: { id: string }
       return NextResponse.json({ error: 'No autenticado' }, { status: 401 });
     }
 
+    const params = await paramsPromise;
     const productoId = await getValidatedProductId(params);
     if (!productoId) {
       return NextResponse.json({ error: 'ID de producto inválido' }, { status: 400 });
@@ -193,7 +195,7 @@ export async function PUT(request: Request, { params }: { params: { id: string }
 }
 
 // DELETE: Eliminar un producto específico
-export async function DELETE(request: Request, { params }: { params: { id: string } }) {
+export async function DELETE(request: Request, { params: paramsPromise }: { params: Promise<{ id: string }> }) {
   const cookieStore = await cookies();
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -207,14 +209,25 @@ export async function DELETE(request: Request, { params }: { params: { id: strin
       return NextResponse.json({ error: 'No autenticado' }, { status: 401 });
     }
 
+    const params = await paramsPromise;
     const productoId = await getValidatedProductId(params);
     if (!productoId) {
       return NextResponse.json({ error: 'ID de producto inválido' }, { status: 400 });
     }
 
-    // Opcional: Verificar si hay EquipoItems asociados antes de eliminar (si la FK no es ON DELETE CASCADE)
-    // Por ahora, asumimos que si se elimina un producto, sus items también deberían (o manejarse con FK)
+    // 1. Primero eliminar todos los equipo-items asociados
+    const { error: deleteItemsError } = await supabase
+      .from('equipo_items')
+      .delete()
+      .eq('producto_id', productoId)
+      .eq('user_id', user.id);
 
+    if (deleteItemsError) {
+      console.error('Error deleting equipo items:', deleteItemsError);
+      return NextResponse.json({ error: 'Error al eliminar los items del producto: ' + deleteItemsError.message }, { status: 500 });
+    }
+
+    // 2. Luego eliminar el producto
     const { error: deleteError, count } = await supabase
       .from('productos')
       .delete({ count: 'exact' })
