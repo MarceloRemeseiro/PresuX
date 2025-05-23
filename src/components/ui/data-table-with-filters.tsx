@@ -1,7 +1,9 @@
 "use client"
 
-import { Search, Loader2 } from "lucide-react"
+import { Search, Loader2, X } from "lucide-react"
 import { Input } from "@/components/ui/input"
+import { Button } from "@/components/ui/button"
+import { Badge } from "@/components/ui/badge"
 import { DataTable, DataTableColumn } from "@/components/ui/data-table"
 import { Contador, EstadoCliente, EstadoProveedor } from "@/components/ui/contador"
 import { Card, CardContent } from "@/components/ui/card"
@@ -36,12 +38,17 @@ interface DataTableWithFiltersProps<T extends Record<string, unknown>, S extends
   searchPlaceholder?: string;
   
   // Filtros de estado (Contador)
-  tipo: "factura" | "presupuesto" | "gasto" | "cliente" | "categoria" | "proveedor" | "producto";
+  tipo: "factura" | "presupuesto" | "gasto" | "cliente" | "categoria" | "proveedor" | "producto" | "personal";
   filtroEstado: S | null; // El filtro activo puede ser S o null (todos)
   setFiltroEstado: (estado: S | null) => void;
   getEstadoFn?: (item: T) => S; // Esta función debe devolver un estado válido S, no null
   showContador?: boolean;
   soloConteo?: boolean;
+  
+  // Filtros de puestos (opcional, para personal)
+  puestosDisponibles?: {id: string, nombre: string}[];
+  filtrosPuestos?: string[];
+  onFiltrosPuestosChange?: (filtros: string[]) => void;
   
   // Ordenación
   sortConfig?: SortConfig;     // Configuración de ordenación actual
@@ -79,6 +86,10 @@ export function DataTableWithFilters<T extends Record<string, unknown>, S extend
   getEstadoFn,
   showContador = true,
   soloConteo = false,
+  
+  puestosDisponibles,
+  filtrosPuestos,
+  onFiltrosPuestosChange,
   
   sortConfig,
   
@@ -133,6 +144,43 @@ export function DataTableWithFilters<T extends Record<string, unknown>, S extend
           )}
         </div>
         
+        {/* Filtros de puestos */}
+        {puestosDisponibles && puestosDisponibles.length > 0 && onFiltrosPuestosChange && (
+          <div className="mb-4">
+            <div className="flex flex-wrap gap-2">
+              <span className="text-sm font-medium text-gray-700 py-1">Filtrar por puestos:</span>
+              {puestosDisponibles.map((puesto) => (
+                <Badge
+                  key={puesto.id}
+                  variant={filtrosPuestos?.includes(puesto.id) ? "default" : "outline"}
+                  className="cursor-pointer hover:bg-gray-100"
+                  onClick={() => {
+                    const nuevosFiltros = filtrosPuestos?.includes(puesto.id)
+                      ? filtrosPuestos.filter(id => id !== puesto.id)
+                      : [...(filtrosPuestos || []), puesto.id];
+                    onFiltrosPuestosChange(nuevosFiltros);
+                  }}
+                >
+                  {puesto.nombre}
+                  {filtrosPuestos?.includes(puesto.id) && (
+                    <X className="h-3 w-3 ml-1" />
+                  )}
+                </Badge>
+              ))}
+              {filtrosPuestos && filtrosPuestos.length > 0 && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => onFiltrosPuestosChange([])}
+                  className="text-xs h-6"
+                >
+                  Limpiar filtros
+                </Button>
+              )}
+            </div>
+          </div>
+        )}
+        
         {isLoading ? (
           <div className="flex justify-center items-center py-8">
             <Loader2 className="h-8 w-8 animate-spin opacity-70" />
@@ -145,7 +193,7 @@ export function DataTableWithFilters<T extends Record<string, unknown>, S extend
           </div>
         ) : filteredItemsCount === 0 ? ( // Usar filteredItemsCount para el mensaje de vacío
           <div className="text-center py-8 text-muted-foreground">
-            {searchTerm || (filtroEstado && filtroEstado !== null) // Si hay búsqueda o filtro de estado aplicado
+            {searchTerm || (filtroEstado && filtroEstado !== null) || (filtrosPuestos && filtrosPuestos.length > 0) // Si hay búsqueda, filtro de estado o filtros de puestos aplicados
               ? searchEmptyMessage
               : emptyMessage}
           </div>

@@ -7,7 +7,7 @@ import { cn } from '@/lib/utils';
 // S ahora se espera que sea string o un subtipo de string
 interface ContadorSimpleProps<T, S extends string> {
   items: T[];                                   // Todos los items para calcular los conteos
-  tipo: "factura" | "presupuesto" | "gasto" | "cliente" | "categoria" | "proveedor";
+  tipo: "factura" | "presupuesto" | "gasto" | "cliente" | "categoria" | "proveedor" | "personal";
   getEstadoFn: (item: T) => S;                  // Función para obtener el estado de un item
   className?: string;                           // Clase adicional para personalizar estilos
 }
@@ -32,6 +32,8 @@ export function ContadorSimple<T, S extends string>({
     estadosPosibles = ["PARTICULAR", "EMPRESA", "AUTONOMO"] as S[];
   } else if (tipo === "proveedor") {
     estadosPosibles = ["BIENES", "SERVICIOS", "MIXTO"] as S[];
+  } else if (tipo === "personal") {
+    estadosPosibles = ["activo", "inactivo"] as S[];
   } else if (tipo === "factura" || tipo === "presupuesto") {
     estadosPosibles = ["PENDIENTE", "ACEPTADO", "RECHAZADO", "PAGADO"] as S[];
   } else if (tipo === "gasto") {
@@ -70,7 +72,9 @@ export function ContadorSimple<T, S extends string>({
             tipo === "gasto" && estado === "PAGADO" && "bg-green-100 text-green-800",
             tipo === "proveedor" && estado === "BIENES" && "bg-blue-100 text-blue-800",
             tipo === "proveedor" && estado === "SERVICIOS" && "bg-green-100 text-green-800",
-            tipo === "proveedor" && estado === "MIXTO" && "bg-purple-100 text-purple-800"
+            tipo === "proveedor" && estado === "MIXTO" && "bg-purple-100 text-purple-800",
+            tipo === "personal" && estado === "activo" && "bg-green-100 text-green-800",
+            tipo === "personal" && estado === "inactivo" && "bg-red-100 text-red-800"
           )}
         >
           {estado}: {counts[estado]}

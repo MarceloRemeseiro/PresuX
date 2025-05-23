@@ -64,7 +64,10 @@ export async function POST(request: NextRequest) {
     }
 
     // Validar datos de entrada
-    const body = await request.json();
+    // Fix para request.json() que a veces devuelve string
+    const rawBody = await request.json();
+    const body = typeof rawBody === 'string' ? JSON.parse(rawBody) : rawBody;
+    
     const validationResult = createPuestoTrabajoSchema.safeParse(body);
 
     if (!validationResult.success) {

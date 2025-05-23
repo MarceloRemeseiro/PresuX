@@ -9,6 +9,7 @@ export * from "./auth";
 export * from "./cliente";
 export * from "./proveedor";
 export * from "./producto";
+export * from "./personal";
 
 // Asegurarse que IProductoConDetalles se exporta si no lo hace el comodín de arriba
 // (aunque `export *` debería cubrirlo si está exportado en producto.ts)

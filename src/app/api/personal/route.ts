@@ -1,10 +1,10 @@
 import { NextResponse } from 'next/server';
 import { createServerClient, type CookieOptions } from '@supabase/ssr';
 import { cookies } from 'next/headers';
-import { ClienteSchema } from '@/lib/schemas/cliente';
-import { ICliente } from '@/types';
+import { createPersonalSchema } from '@/lib/schemas/personal';
+import { IPersonal } from '@/types';
 
-// GET /api/clientes - Obtener todos los clientes
+// GET /api/personal - Obtener todo el personal
 export async function GET() {
   const cookieStore = await cookies();
   
@@ -20,8 +20,6 @@ export async function GET() {
           try {
             cookieStore.set({ name, value, ...options });
           } catch (error) {
-            // La API de cookies puede fallar en modo API route
-            // Por eso capturamos este error para evitar que rompa
             console.error("Error al establecer cookie:", error);
           }
         },
@@ -29,7 +27,6 @@ export async function GET() {
           try {
             cookieStore.set({ name, value: '', ...options, maxAge: 0 });
           } catch (error) {
-            // La API de cookies puede fallar en modo API route
             console.error("Error al eliminar cookie:", error);
           }
         },
@@ -44,20 +41,20 @@ export async function GET() {
   }
 
   try {
-    const { data: clientes, error } = await supabase
-      .from('clientes')
+    const { data: personal, error } = await supabase
+      .from('personal')
       .select('*')
       .eq('user_id', user.id)
       .order('nombre', { ascending: true });
 
     if (error) {
-      console.error('Error al obtener clientes:', error);
-      return NextResponse.json({ error: 'Error al obtener clientes', details: error.message }, { status: 500 });
+      console.error('Error al obtener personal:', error);
+      return NextResponse.json({ error: 'Error al obtener personal', details: error.message }, { status: 500 });
     }
 
-    return NextResponse.json(clientes as ICliente[]);
+    return NextResponse.json(personal as IPersonal[]);
   } catch (e: unknown) {
-    console.error('Excepción en GET /api/clientes:', e);
+    console.error('Excepción en GET /api/personal:', e);
     if (e instanceof Error) {
       return NextResponse.json({ error: 'Excepción en el servidor', details: e.message }, { status: 500 });
     }
@@ -65,7 +62,7 @@ export async function GET() {
   }
 }
 
-// POST /api/clientes - Crear un nuevo cliente
+// POST /api/personal - Crear nuevo personal
 export async function POST(request: Request) {
   const cookieStore = await cookies();
   
@@ -81,7 +78,6 @@ export async function POST(request: Request) {
           try {
             cookieStore.set({ name, value, ...options });
           } catch (error) {
-            // La API de cookies puede fallar en modo API route
             console.error("Error al establecer cookie:", error);
           }
         },
@@ -89,7 +85,6 @@ export async function POST(request: Request) {
           try {
             cookieStore.set({ name, value: '', ...options, maxAge: 0 });
           } catch (error) {
-            // La API de cookies puede fallar en modo API route
             console.error("Error al eliminar cookie:", error);
           }
         },
@@ -104,36 +99,44 @@ export async function POST(request: Request) {
   }
 
   try {
-    const body = await request.json();
-    const validation = ClienteSchema.safeParse(body);
+    // Fix para request.json() que a veces devuelve string
+    const rawBody = await request.json();
+    const body = typeof rawBody === 'string' ? JSON.parse(rawBody) : rawBody;
+    
+    const validation = createPersonalSchema.safeParse(body);
 
     if (!validation.success) {
-      return NextResponse.json({ error: 'Datos de cliente inválidos', details: validation.error.flatten().fieldErrors }, { status: 400 });
+      return NextResponse.json({ 
+        error: 'Datos de personal inválidos', 
+        details: validation.error.flatten().fieldErrors 
+      }, { status: 400 });
     }
 
-    const nuevoClienteData = {
+    const nuevoPersonalData = {
       ...validation.data,
-      user_id: user.id, // Asegurar que el cliente se asocia al usuario autenticado
+      user_id: user.id,
     };
 
     const { data, error } = await supabase
-      .from('clientes')
-      .insert(nuevoClienteData)
+      .from('personal')
+      .insert(nuevoPersonalData)
       .select()
-      .single(); // Para obtener el cliente creado
+      .single();
 
     if (error) {
-      console.error('Error al crear cliente:', error);
-      // Manejar errores específicos de la BD, ej. NIF duplicado si tuvieras un constraint UNIQUE
-      if (error.code === '23505') { // Código de error de violación de unicidad en PostgreSQL
-         return NextResponse.json({ error: 'Error al crear cliente: posible duplicado (ej. NIF)', details: error.message }, { status: 409 }); // Conflict
+      console.error('Error al crear personal:', error);
+      if (error.code === '23505') {
+        return NextResponse.json({ 
+          error: 'Error al crear personal: posible duplicado', 
+          details: error.message 
+        }, { status: 409 });
       }
-      return NextResponse.json({ error: 'Error al crear cliente', details: error.message }, { status: 500 });
+      return NextResponse.json({ error: 'Error al crear personal', details: error.message }, { status: 500 });
     }
 
-    return NextResponse.json(data as ICliente, { status: 201 });
+    return NextResponse.json({ personal: data as IPersonal }, { status: 201 });
   } catch (e: unknown) {
-    console.error('Excepción en POST /api/clientes:', e);
+    console.error('Excepción en POST /api/personal:', e);
     if (e instanceof Error) {
       return NextResponse.json({ error: 'Excepción en el servidor', details: e.message }, { status: 500 });
     }

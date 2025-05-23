@@ -3,7 +3,9 @@ import { TipoCliente } from '@/types'; // Asegúrate que la ruta al enum sea cor
 
 export const ClienteSchema = z.object({
   // id se genera en la BD, user_id se toma de la sesión
-  nombre: z.string().min(1, { message: 'El nombre es requerido.' }).max(255),
+  nombre: z.string()
+    .min(1, { message: 'El nombre es requerido.' })
+    .max(255),
   tipo: z.nativeEnum(TipoCliente, { errorMap: () => ({ message: 'Tipo de cliente inválido.' }) }),
   persona_de_contacto: z.string().max(255).optional().nullable(),
   nif: z.string().max(20).optional().nullable(),
