@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Trash2, Settings, AlertTriangle } from "lucide-react";
+import { Settings, AlertTriangle, ChevronDown, ChevronRight } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import {
@@ -19,6 +19,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { ConfigTable } from "@/components/ui/config-table";
 import { ModalCrearCategoria } from "@/components/ui/modal-crear-categoria";
 import { ModalCrearMarca } from "@/components/ui/modal-crear-marca";
 import { apiClient } from "@/lib/apiClient";
@@ -32,12 +33,47 @@ interface MarcaConUso extends IMarca {
   productCount?: number;
 }
 
+interface ConfigSectionProps {
+  title: string;
+  description: string;
+  isExpanded: boolean;
+  onToggle: () => void;
+  children: React.ReactNode;
+}
+
+function ConfigSection({ title, description, isExpanded, onToggle, children }: ConfigSectionProps) {
+  return (
+    <Card>
+      <CardHeader className="cursor-pointer" onClick={onToggle}>
+        <div className="flex items-center justify-between">
+          <div className="flex-1">
+            <CardTitle className="flex items-center gap-2">
+              {isExpanded ? (
+                <ChevronDown className="h-4 w-4 text-gray-500" />
+              ) : (
+                <ChevronRight className="h-4 w-4 text-gray-500" />
+              )}
+              {title}
+            </CardTitle>
+            <CardDescription className="mt-1">{description}</CardDescription>
+          </div>
+        </div>
+      </CardHeader>
+      {isExpanded && <CardContent>{children}</CardContent>}
+    </Card>
+  );
+}
+
 export default function ConfiguracionPage() {
   const [categorias, setCategorias] = useState<CategoriaConUso[]>([]);
   const [marcas, setMarcas] = useState<MarcaConUso[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [deleteError, setDeleteError] = useState<string | null>(null);
   const [showDeleteErrorDialog, setShowDeleteErrorDialog] = useState(false);
+  
+  // Estados para controlar qué secciones están expandidas
+  const [categoriasExpanded, setCategoriasExpanded] = useState(false);
+  const [marcasExpanded, setMarcasExpanded] = useState(false);
 
   useEffect(() => {
     const loadData = async () => {
@@ -77,11 +113,15 @@ export default function ConfiguracionPage() {
   const handleCategoriaCreated = (nuevaCategoria: ICategoriaProducto) => {
     const categoriaConUso = { ...nuevaCategoria, productCount: 0 };
     setCategorias(prev => [...prev, categoriaConUso].sort((a, b) => a.nombre.localeCompare(b.nombre)));
+    // Auto-expandir la sección cuando se crea una nueva categoría
+    setCategoriasExpanded(true);
   };
 
   const handleMarcaCreated = (nuevaMarca: IMarca) => {
     const marcaConUso = { ...nuevaMarca, productCount: 0 };
     setMarcas(prev => [...prev, marcaConUso].sort((a, b) => a.nombre.localeCompare(b.nombre)));
+    // Auto-expandir la sección cuando se crea una nueva marca
+    setMarcasExpanded(true);
   };
 
   const handleDeleteCategoria = async (categoria: CategoriaConUso) => {
@@ -138,132 +178,75 @@ export default function ConfiguracionPage() {
     );
   }
 
+  // Componentes wrapper para normalizar las props de los modales
+  const WrappedModalCrearCategoria = ({ onItemCreated }: { onItemCreated: (item: CategoriaConUso) => void }) => (
+    <ModalCrearCategoria onCategoriaCreated={onItemCreated} />
+  );
+
+  const WrappedModalCrearMarca = ({ onItemCreated }: { onItemCreated: (item: MarcaConUso) => void }) => (
+    <ModalCrearMarca onMarcaCreated={onItemCreated} />
+  );
+
   return (
     <div className="py-10">
       <div className="flex items-center gap-3 mb-8">
         <Settings className="h-8 w-8 text-blue-600" />
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Configuración</h1>
-          <p className="text-gray-600">Gestiona las categorías y marcas de productos</p>
+          <p className="text-gray-600">Gestiona la configuración de tu sistema</p>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Categorías */}
-        <Card>
-          <CardHeader>
-            <div className="flex items-center justify-between">
-              <div>
-                <CardTitle>Categorías de Productos</CardTitle>
-                <CardDescription>
-                  Gestiona las categorías disponibles para clasificar tus productos
-                </CardDescription>
-              </div>
-              <ModalCrearCategoria onCategoriaCreated={handleCategoriaCreated} />
-            </div>
-          </CardHeader>
-          <CardContent>
-            {categorias.length === 0 ? (
-              <p className="text-gray-500 text-center py-8">
-                No hay categorías creadas aún
-              </p>
-            ) : (
-              <div className="space-y-2">
-                {categorias.map((categoria) => (
-                  <div
-                    key={categoria.id}
-                    className="flex items-center justify-between p-3 border rounded-lg hover:bg-gray-50"
-                  >
-                    <div className="flex-1">
-                      <span className="font-medium">{categoria.nombre}</span>
-                      <div className="text-xs text-gray-500 mt-1">
-                        {categoria.productCount === 0 
-                          ? 'No se usa en productos' 
-                          : `Usada en ${categoria.productCount} producto${categoria.productCount === 1 ? '' : 's'}`
-                        }
-                      </div>
-                    </div>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => handleDeleteCategoria(categoria)}
-                      className={
-                        !!(categoria.productCount && categoria.productCount > 0)
-                          ? 'text-gray-400 cursor-not-allowed'
-                          : 'text-red-600 hover:text-red-700 hover:bg-red-50'
-                      }
-                      disabled={!!(categoria.productCount && categoria.productCount > 0)}
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </div>
-                ))}
-              </div>
-            )}
-          </CardContent>
-        </Card>
+      <div className="space-y-4 max-w-4xl">
+        {/* Sección de Categorías */}
+        <ConfigSection
+          title="Categorías de Productos"
+          description="Gestiona las categorías disponibles para clasificar tus productos"
+          isExpanded={categoriasExpanded}
+          onToggle={() => setCategoriasExpanded(!categoriasExpanded)}
+        >
+          <ConfigTable
+            items={categorias}
+            itemType="categoría"
+            itemTypePlural="categorías"
+            onDelete={handleDeleteCategoria}
+            CreateModal={WrappedModalCrearCategoria}
+            onItemCreated={handleCategoriaCreated}
+          />
+        </ConfigSection>
 
-        {/* Marcas */}
-        <Card>
-          <CardHeader>
-            <div className="flex items-center justify-between">
-              <div>
-                <CardTitle>Marcas</CardTitle>
-                <CardDescription>
-                  Gestiona las marcas disponibles para tus productos
-                </CardDescription>
-              </div>
-              <ModalCrearMarca onMarcaCreated={handleMarcaCreated} />
-            </div>
-          </CardHeader>
-          <CardContent>
-            {marcas.length === 0 ? (
-              <p className="text-gray-500 text-center py-8">
-                No hay marcas creadas aún
-              </p>
-            ) : (
-              <div className="space-y-2">
-                {marcas.map((marca) => (
-                  <div
-                    key={marca.id}
-                    className="flex items-center justify-between p-3 border rounded-lg hover:bg-gray-50"
-                  >
-                    <div className="flex-1">
-                      <span className="font-medium">{marca.nombre}</span>
-                      <div className="text-xs text-gray-500 mt-1">
-                        {marca.productCount === 0 
-                          ? 'No se usa en productos' 
-                          : `Usada en ${marca.productCount} producto${marca.productCount === 1 ? '' : 's'}`
-                        }
-                      </div>
-                    </div>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => handleDeleteMarca(marca)}
-                      className={
-                        !!(marca.productCount && marca.productCount > 0)
-                          ? 'text-gray-400 cursor-not-allowed'
-                          : 'text-red-600 hover:text-red-700 hover:bg-red-50'
-                      }
-                      disabled={!!(marca.productCount && marca.productCount > 0)}
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </div>
-                ))}
-              </div>
-            )}
+        {/* Sección de Marcas */}
+        <ConfigSection
+          title="Marcas"
+          description="Gestiona las marcas disponibles para tus productos"
+          isExpanded={marcasExpanded}
+          onToggle={() => setMarcasExpanded(!marcasExpanded)}
+        >
+          <ConfigTable
+            items={marcas}
+            itemType="marca"
+            itemTypePlural="marcas"
+            onDelete={handleDeleteMarca}
+            CreateModal={WrappedModalCrearMarca}
+            onItemCreated={handleMarcaCreated}
+          />
+        </ConfigSection>
+
+        {/* Placeholder para futuras secciones de configuración */}
+        <Card className="border-dashed border-2 border-gray-200">
+          <CardContent className="flex items-center justify-center py-8">
+            <p className="text-gray-500 text-sm">Más opciones de configuración próximamente...</p>
           </CardContent>
         </Card>
       </div>
 
-      <div className="mt-8 p-4 bg-blue-50 rounded-lg">
+      <div className="mt-8 p-4 bg-blue-50 rounded-lg max-w-4xl">
         <h3 className="font-medium text-blue-900 mb-2">💡 Consejos</h3>
         <div className="text-sm text-blue-700 space-y-1">
           <p>• También puedes crear categorías y marcas directamente desde los formularios de productos usando los botones &apos;+&apos;.</p>
           <p>• Solo puedes eliminar categorías y marcas que no estén siendo utilizadas por ningún producto.</p>
           <p>• Para eliminar una categoría/marca en uso, primero cambia la categoría/marca en todos los productos que la utilizan.</p>
+          <p>• Haz clic en los títulos de las secciones para expandir o contraer el contenido.</p>
         </div>
       </div>
 
